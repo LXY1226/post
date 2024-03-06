@@ -560,17 +560,17 @@ func (init *Initializer) initFile(
 			batchSize = remaining
 		}
 
+		// Calculate labels of the batch position range.
+		startPosition := fileOffset + currentPosition
+		endPosition := startPosition + uint64(batchSize) - 1
+
+		t := time.Now()
+		res, err := wo.Positions(startPosition, endPosition)
 		init.logger.Info("initialization: status",
 			zap.Int("fileIndex", fileIndex),
 			zap.Uint64("currentPosition", currentPosition),
 			zap.Uint64("remaining", remaining),
 		)
-
-		// Calculate labels of the batch position range.
-		startPosition := fileOffset + currentPosition
-		endPosition := startPosition + uint64(batchSize) - 1
-
-		res, err := wo.Positions(startPosition, endPosition)
 		if err != nil {
 			return fmt.Errorf("failed to compute labels: %w", err)
 		}
