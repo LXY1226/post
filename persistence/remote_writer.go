@@ -9,6 +9,9 @@ import (
 
 func NewRemoteLabelsWriter(datadir string, index int, bitsPerLabel uint) (*RemoteWriter, error) {
 	conn, err := rpc.Dial("tcp", remote_config.TargetConnectAddr.String())
+	if err != nil {
+		return nil, err
+	}
 	err = conn.Call("RpcFileWriter.Open", remote_config.RemoteWriterOpenData{
 		DataDir:      datadir,
 		Index:        index,
@@ -67,5 +70,9 @@ func (wr *RemoteWriter) Close() error {
 	if wr.error != nil {
 		return wr.error
 	}
-	return wr.client.Call("RpcFileWriter.Close", struct{}{}, nil)
+	err := wr.client.Call("RpcFileWriter.Close", struct{}{}, nil)
+	if err != nil {
+		return err
+	}
+	return wr.client.Close()
 }
