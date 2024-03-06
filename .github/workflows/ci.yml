@@ -57,10 +57,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - ubuntu-latest
-          - [self-hosted, linux, arm64]
-          - macos-13
-          - [self-hosted, macos, arm64]
           - windows-latest
     steps:
       - name: Add OpenCL support - Ubuntu
@@ -107,10 +103,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-        - ubuntu-latest
-        - [self-hosted, linux, arm64]
-        - macos-13
-        - [self-hosted, macos, arm64]
         - windows-latest
     steps:
       - name: Add OpenCL support - Ubuntu
