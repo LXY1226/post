@@ -21,6 +21,7 @@ func NewRemoteLabelsWriter(datadir string, index int, bitsPerLabel uint) (*Remot
 	go func() {
 		for buf := range wr.writeBuf {
 			wr.error = conn.Call("RpcFileWriter.Write", buf, nil)
+			wr.remain.Done()
 			if wr.error != nil {
 				return
 			}
