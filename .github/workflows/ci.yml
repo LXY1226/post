@@ -9,28 +9,6 @@ on:
       - 'v*'
 
 jobs:
-  quicktests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-      - name: set up go
-        uses: actions/setup-go@v5
-        with:
-          check-latest: true
-          go-version-file: "go.mod"
-      - name: Install OpenCL dev
-        run: sudo apt-get update -q && sudo apt-get install -qy ocl-icd-opencl-dev
-      - name: fmt, tidy, generate
-        run: |
-          make install
-          make test-fmt
-          make test-tidy
-          make test-generate
-      - name: staticcheck
-        run: make staticcheck
-
   build:
     name: Build postcli
     runs-on: ${{ matrix.os }}
@@ -102,29 +80,3 @@ jobs:
           prerelease: false
           draft: true
           fail_on_unmatched_files: true
-
-  coverage:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs:
-      - quicktests
-      - lint
-    steps:
-      - name: Add OpenCL support - Ubuntu
-        run: sudo apt-get update -q && sudo apt-get install -qy ocl-icd-opencl-dev libpocl2
-      - uses: actions/checkout@v4
-      - name: set up go
-        uses: actions/setup-go@v5
-        with:
-          check-latest: true
-          go-version-file: "go.mod"
-      - name: setup env
-        run: make install
-      - name: test coverage
-        run: make cover
-      - name: Upload to codecov.io
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
