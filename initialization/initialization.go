@@ -311,7 +311,6 @@ func (init *Initializer) Initialize(ctx context.Context) error {
 		oracle.WithVRFDifficulty(difficulty),
 		oracle.WithScryptParams(init.opts.Scrypt),
 		oracle.WithLogger(init.logger),
-		//oracle.WithScryptServer,
 	)
 	if err != nil {
 		return err
