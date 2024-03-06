@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"go.uber.org/zap"
 
@@ -304,13 +305,13 @@ func (init *Initializer) Initialize(ctx context.Context) error {
 	numLabels := uint64(init.opts.NumUnits) * init.cfg.LabelsPerUnit
 	difficulty := init.powDifficultyFunc(numLabels)
 	batchSize := init.opts.ComputeBatchSize
-
 	wo, err := oracle.New(
 		oracle.WithProviderID(init.opts.ProviderID),
 		oracle.WithCommitment(init.commitment),
 		oracle.WithVRFDifficulty(difficulty),
 		oracle.WithScryptParams(init.opts.Scrypt),
 		oracle.WithLogger(init.logger),
+		//oracle.WithScryptServer,
 	)
 	if err != nil {
 		return err
@@ -570,11 +571,11 @@ func (init *Initializer) initFile(
 			zap.Int("fileIndex", fileIndex),
 			zap.Uint64("currentPosition", currentPosition),
 			zap.Uint64("remaining", remaining),
+			zap.Float64("time", time.Since(t).Seconds()),
 		)
 		if err != nil {
 			return fmt.Errorf("failed to compute labels: %w", err)
 		}
-
 		// sanity check with reference oracle
 		reference, err := woReference.Position(endPosition)
 		if err != nil {
