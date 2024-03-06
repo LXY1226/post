@@ -134,7 +134,7 @@ func main() {
 				logger.Info("failed to compute positions", zap.Error(err))
 				break
 			}
-			logger.Info("task completed", zap.Float64("duration", time.Since(t).Seconds()), zap.Int("output_size", len(result.Output))
+			logger.Info("task completed", zap.Float64("duration", time.Since(t).Seconds()), zap.Int("output_size", len(result.Output)))
 			idxSolution := uint64(math.MaxUint64)
 			if result.IdxSolution != nil {
 				idxSolution = *result.IdxSolution
