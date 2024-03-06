@@ -560,7 +560,7 @@ func (init *Initializer) initFile(
 			batchSize = remaining
 		}
 
-		init.logger.Debug("initialization: status",
+		init.logger.Info("initialization: status",
 			zap.Int("fileIndex", fileIndex),
 			zap.Uint64("currentPosition", currentPosition),
 			zap.Uint64("remaining", remaining),
