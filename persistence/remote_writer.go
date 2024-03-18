@@ -2,13 +2,18 @@ package persistence
 
 import (
 	"net/rpc"
+	"os"
 	"sync"
 
 	"github.com/spacemeshos/post/remote_config"
 )
 
 func NewRemoteLabelsWriter(datadir string, index int, bitsPerLabel uint) (*RemoteWriter, error) {
-	conn, err := rpc.Dial("tcp", remote_config.TargetConnectAddr.String())
+	address, ok := os.LookupEnv("REMOTE_ADDR")
+	if !ok {
+		panic("no REMOTE_ADDR provided")
+	}
+	conn, err := rpc.Dial("tcp", address)
 	if err != nil {
 		return nil, err
 	}
@@ -49,10 +54,7 @@ func (wr *RemoteWriter) Write(b []byte) error {
 
 func (wr *RemoteWriter) Flush() error {
 	wr.remain.Wait()
-	if wr.error != nil {
-		return wr.error
-	}
-	return wr.client.Call("RpcFileWriter.Flush", struct{}{}, nil)
+	return wr.error
 }
 
 func (wr *RemoteWriter) NumLabelsWritten() (uint64, error) {

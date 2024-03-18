@@ -546,7 +546,7 @@ func (init *Initializer) initFile(
 		select {
 		case <-ctx.Done():
 			init.logger.Info("initialization: stopped")
-			if err := writer.Flush(); err != nil {
+			if err := writer.Close(); err != nil {
 				return err
 			}
 			return ctx.Err()
