@@ -364,8 +364,7 @@ func (init *Initializer) Initialize(ctx context.Context) error {
 	defer init.saveMetadata()
 
 	for i := *init.lastPosition.Load(); i < math.MaxUint64; i += batchSize {
-		lastPos := i
-		init.lastPosition.Store(&lastPos)
+		init.lastPosition.Store(&i)
 
 		select {
 		case <-ctx.Done():
