@@ -305,6 +305,7 @@ func (init *Initializer) Initialize(ctx context.Context) error {
 	numLabels := uint64(init.opts.NumUnits) * init.cfg.LabelsPerUnit
 	difficulty := init.powDifficultyFunc(numLabels)
 	batchSize := init.opts.ComputeBatchSize
+
 	wo, err := oracle.New(
 		oracle.WithProviderID(init.opts.ProviderID),
 		oracle.WithCommitment(init.commitment),
@@ -503,7 +504,7 @@ func (init *Initializer) initFile(
 	fileTargetPosition := fileOffset + fileNumLabels
 
 	// Initialize the labels file writer.
-	writer, err := persistence.NewFileWriter(init.opts.DataDir, config.BitsPerLabel)
+	writer, err := persistence.NewLabelsWriter(init.opts.DataDir, fileIndex, config.BitsPerLabel)
 	//writer, err := persistence.NewRemoteLabelsWriter(init.opts.DataDir, fileIndex, config.BitsPerLabel)
 	if err != nil {
 		return err
