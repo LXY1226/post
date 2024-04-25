@@ -503,7 +503,8 @@ func (init *Initializer) initFile(
 	fileTargetPosition := fileOffset + fileNumLabels
 
 	// Initialize the labels file writer.
-	writer, err := persistence.NewRemoteLabelsWriter(init.opts.DataDir, fileIndex, config.BitsPerLabel)
+	writer, err := persistence.NewFileWriter(init.opts.DataDir, config.BitsPerLabel)
+	//writer, err := persistence.NewRemoteLabelsWriter(init.opts.DataDir, fileIndex, config.BitsPerLabel)
 	if err != nil {
 		return err
 	}

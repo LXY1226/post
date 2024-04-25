@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/ed25519"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"flag"
@@ -42,7 +43,8 @@ var (
 	fraction  float64
 
 	idHex              string
-	commitmentAtxIdHex string
+	commitmentAtxIdB64 string
+	nodeAddr           string
 	reset              bool
 	numUnits           uint64
 
@@ -75,7 +77,8 @@ func parseFlags() {
 	flag.UintVar(&opts.Scrypt.N, "scryptN", opts.Scrypt.N, "scrypt N parameter")
 	flag.BoolVar(&reset, "reset", false, "whether to reset the datadir before starting")
 	flag.StringVar(&idHex, "id", "", "miner's id (public key), in hex (will be auto-generated if not provided)")
-	flag.StringVar(&commitmentAtxIdHex, "commitmentAtxId", "", "commitment atx id, in hex (required)")
+	flag.StringVar(&commitmentAtxIdB64, "commitmentAtxId", "", "commitment atx id, in base64 (required unless nodeAddr is valid)\n")
+	flag.StringVar(&nodeAddr, "nodeAddr", "0.0.0.0:9093", "node address for full node (0.0.0.0:9093)")
 	flag.Uint64Var(&numUnits, "numUnits", 0, "number of units (required)")
 
 	flag.IntVar(&opts.FromFileIdx, "fromFile", 0, "index of the first file to init (inclusive)")
@@ -180,12 +183,12 @@ func processFlags() {
 		cfg.MaxNumUnits = uint32(numUnits)
 	}
 
-	if !flagSet["commitmentAtxId"] && meta != nil {
-		log.Fatalln("-commitmentAtxId must be specified to perform initialization.")
-	}
+	//if !flagSet["commitmentAtxId"] && meta != nil {
+	//	commitmentAtxIdB64 = "" // no need(
+	//}
 
 	if flagSet["commitmentAtxId"] {
-		commitmentAtxId, err := hex.DecodeString(commitmentAtxIdHex)
+		commitmentAtxId, err := base64.StdEncoding.DecodeString(commitmentAtxIdB64)
 		if err != nil {
 			log.Println("invalid commitmentAtxId:", err)
 		}
@@ -193,8 +196,8 @@ func processFlags() {
 			log.Println("WARNING: it appears that", opts.DataDir,
 				"was previously initialized with a different `commitmentAtxId` value.",
 			)
-			log.Println("\tCurrent value:", hex.EncodeToString(meta.CommitmentAtxId))
-			log.Println("\tValue passed to postcli:", commitmentAtxIdHex)
+			log.Println("\tCurrent value:", base64.StdEncoding.EncodeToString(meta.CommitmentAtxId))
+			log.Println("\tValue passed to postcli:", commitmentAtxIdB64)
 			log.Fatalln("aborting")
 		}
 	}
@@ -326,10 +329,28 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to decode id %s: %s\n", idHex, err)
 	}
-
-	commitmentAtxId, err := hex.DecodeString(commitmentAtxIdHex)
-	if err != nil {
-		log.Fatalf("failed to decode commitmentAtxId %s: %s\n", commitmentAtxIdHex, err)
+	var commitmentAtxId []byte
+	if commitmentAtxIdB64 != "" {
+		commitmentAtxId, err = base64.StdEncoding.DecodeString(commitmentAtxIdB64)
+		if err != nil {
+			log.Fatalf("failed to decode commitmentAtxId %s: %s\n", commitmentAtxIdB64, err)
+		}
+	} else {
+		metadata, err := initialization.LoadMetadata(opts.DataDir)
+		if err != nil {
+			if errors.Is(err, initialization.ErrStateMetadataFileMissing) {
+				log.Println("no commitmentAtxId provided, dialing to remote node", nodeAddr)
+				commitmentAtxId, err = shared.GetHighestAtxId(ctx, nodeAddr)
+				if err != nil {
+					log.Fatalf("failed to get highest atx id from %s: %s\n", nodeAddr, err)
+				}
+				log.Println("highest atx id:", base64.StdEncoding.EncodeToString(commitmentAtxId))
+			} else {
+				log.Fatalf("failed to load metadata from %s: %s\n", opts.DataDir, err)
+			}
+		} else {
+			commitmentAtxId = metadata.CommitmentAtxId
+		}
 	}
 
 	init, err := initialization.NewInitializer(
